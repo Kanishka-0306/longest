@@ -1,56 +1,48 @@
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
-import java.util.Arrays;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Problem: Longest Substring Without Repeating Characters
- * Approach: Optimized Sliding Window using ASCII Direct Index Mapping
- * 
- * Time Complexity: O(N)
- * Space Complexity: O(1)
+ * Approach: Sliding window with last-seen indexes of Unicode code points
+ *
+ * Time Complexity: O(N), where N is the number of Unicode code points
+ * Space Complexity: O(min(N, number of distinct code points))
  */
 public class Solution {
-    
+
     public static int lengthOfLongestSubstring(String s) {
-        if (s == null || s.length() == 0) {
+        if (s == null || s.isEmpty()) {
             return 0;
         }
 
-        // Stores the last seen index of each ASCII character
-        int[] lastSeen = new int[128];
-        Arrays.fill(lastSeen, -1);
+        // Maps each Unicode code point to its most recent code-point index.
+        Map<Integer, Integer> lastSeen = new HashMap<>();
+        int left = 0;
+        int maxLength = 0;
+        int codePointIndex = 0;
 
-        int maxLen = 0;
-        int left = 0; // Left pointer of the sliding window
+        for (int offset = 0; offset < s.length();) {
+            int codePoint = s.codePointAt(offset);
 
-        for (int right = 0; right < s.length(); right++) {
-            char currentChar = s.charAt(right);
-
-            // If the character was seen inside the active window, shift the left pointer
-            if (lastSeen[currentChar] >= left) {
-                left = lastSeen[currentChar] + 1;
+            Integer previousIndex = lastSeen.put(codePoint, codePointIndex);
+            if (previousIndex != null && previousIndex >= left) {
+                left = previousIndex + 1;
             }
 
-            // Record/update the character's latest index
-            lastSeen[currentChar] = right;
-
-            // Calculate current window length
-            maxLen = Math.max(maxLen, right - left + 1);
+            maxLength = Math.max(maxLength, codePointIndex - left + 1);
+            codePointIndex++;
+            offset += Character.charCount(codePoint);
         }
 
-        return maxLen;
+        return maxLength;
     }
 
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String input = reader.readLine();
-
-        if (input == null) {
-            System.out.println(0);
-            return;
-        }
-
         System.out.println(lengthOfLongestSubstring(input));
     }
 }
